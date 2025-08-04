@@ -3,9 +3,9 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { full_name, email, phone_number,password, user_type  } = req.body;
 
-  if (!name || !email || !password || !role) {
+  if (!full_name || !email || !password || !user_type) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
@@ -13,10 +13,10 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users (name, email, password, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, email, role`,
-      [name, email, hashedPassword, role]
+      `INSERT INTO users (full_name, email, phone_number, password_hash, user_type)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, full_name, email, user_type`,
+      [full_name, email, phone_number, hashedPassword, user_type]
     );
 
     res.status(201).json({ user: result.rows[0] });
@@ -44,7 +44,7 @@ exports.login = async (req,res) =>{
     }
 
     // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }

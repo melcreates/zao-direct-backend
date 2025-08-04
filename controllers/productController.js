@@ -2,34 +2,82 @@ const pool = require('../db');
 
 // ✅ Create Product
 exports.createProduct = async (req, res) => {
-  const { name, description, price, image_url } = req.body;
+  const { name, description, price, image_url, category, created_by} = req.body;
+
+  // Validation
+  if (!name || !price || !image_url || !category) {
+    return res.status(400).json({ error: 'Name, price, unit, and category are required.' });
+  }
 
   try {
     const result = await pool.query(
-      `INSERT INTO products (name, description, price, image_url, created_by)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO products (name, description, price, image_url, category, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [name, description, price, image_url, req.user.id]
+      [name, description, price, image_url, category, created_by]
     );
 
-    res.status(201).json({ message: 'Product created', product: result.rows[0] });
+    res.status(201).json({ product: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error while creating product.' });
+  }
+};
+
+
+// ✅ Get All Products
+// ✅ Get All Products with optional search & category filtering
+exports.getAllProducts = async (req, res) => {
+  try {
+    const { search, category } = req.query;
+
+    let query = `
+      SELECT p.*, u.full_name AS owner
+      FROM products p
+      JOIN users u ON u.id = p.created_by
+      WHERE 1=1
+    `;
+    const params = [];
+
+    // 🔍 Add search condition
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND (p.name ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
+    }
+
+    // 🏷️ Add category condition
+    if (category) {
+      params.push(category);
+      query += ` AND p.category = $${params.length}`;
+    }
+
+    query += ` ORDER BY p.created_at DESC`;
+
+    const result = await pool.query(query, params);
+
+    // ✅ Wrap with key `products`
+    res.json({ products: result.rows });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ✅ Get All Products
-exports.getAllProducts = async (req, res) => {
+
+
+
+// ✅ Get Products from a particular farmer
+exports.getSpecificFarmerProducts = async (req, res) => {
+  const { userId } = req.params;
+
   try {
     const result = await pool.query(
-      `SELECT p.*, u.name AS owner
-       FROM products p
-       JOIN users u ON u.id = p.created_by
-       ORDER BY p.created_at DESC`
+      `SELECT * FROM products WHERE created_by = $1 ORDER BY created_at DESC`,
+      [userId]
     );
 
-    res.json({ products: result.rows });
+    res.json({ products: result.rows }); // ✅ Send the products in response
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
