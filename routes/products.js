@@ -5,6 +5,7 @@ const productController = require('../controllers/productController');
 
 // 🔓 Public
 router.get('/products', productController.getAllProducts);
+router.get('/products/:productId', productController.getProductById);
 
 // 🔐 Protected
 router.post('/products', verifyToken, productController.createProduct);

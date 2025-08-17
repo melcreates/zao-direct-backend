@@ -64,8 +64,21 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+// ✅ Get Product By Id
+exports.getProductById = async (req,res) =>{
+  const {productId} = req.params;
 
-
+  try{
+    const result = await pool.query(
+      `SELECT * FROM products WHERE id = $1`,
+      [productId]
+    );
+    res.json({ product: result.rows[0] }); // ✅ Send the products in response
+  }catch(err){
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
 
 // ✅ Get Products from a particular farmer
 exports.getSpecificFarmerProducts = async (req, res) => {

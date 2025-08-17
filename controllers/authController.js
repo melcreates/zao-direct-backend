@@ -3,9 +3,9 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
-  const { full_name, email, phone_number,password, user_type  } = req.body;
+  const { full_name, email, phone_number,password, user_type, location } = req.body;
 
-  if (!full_name || !email || !password || !user_type) {
+  if (!full_name || !email || !password || !user_type || !location) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
@@ -13,10 +13,10 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users (full_name, email, phone_number, password_hash, user_type)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (full_name, email, phone_number, password_hash, user_type, location)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, full_name, email, user_type`,
-      [full_name, email, phone_number, hashedPassword, user_type]
+      [full_name, email, phone_number, hashedPassword, user_type, location]
     );
 
     res.status(201).json({ user: result.rows[0] });
@@ -59,7 +59,12 @@ exports.login = async (req,res) =>{
 
     res.json({
       message: 'Login successful',
-      token
+      token,
+      user: {
+        id: user.id,
+        name: user.full_name,      // or whatever your column is
+        email: user.email
+      }
     });
   } catch (err) {
     console.error(err.message);
