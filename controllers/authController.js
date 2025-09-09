@@ -75,7 +75,7 @@ exports.login = async (req,res) =>{
 exports.getMe = async(req,res) => {
     try {
     const result = await pool.query(
-      'SELECT id, email, name FROM users WHERE id = $1',
+      'SELECT id, email, full_name FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -86,7 +86,11 @@ exports.getMe = async(req,res) => {
 
     res.json({
       message: 'Authenticated user',
-      user
+      user: {
+        id: user.id,
+        name: user.full_name,
+        email: user.email
+      }
     });
   } catch (err) {
     console.error(err.message);
