@@ -3,7 +3,7 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
-  const { full_name, email, phone_number,password, user_type, location } = req.body;
+  const { full_name, email, phone_number, password, user_type, location } = req.body;
 
   if (!full_name || !email || !password || !user_type || !location) {
     return res.status(400).json({ error: 'All fields are required.' });
@@ -31,8 +31,8 @@ exports.register = async (req, res) => {
 };
 
 
-exports.login = async (req,res) =>{
-    const { email, password } = req.body;
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
 
   try {
     // Check if user exists
@@ -72,10 +72,10 @@ exports.login = async (req,res) =>{
   }
 }
 
-exports.getMe = async(req,res) => {
-    try {
+exports.getMe = async (req, res) => {
+  try {
     const result = await pool.query(
-      'SELECT id, email, full_name FROM users WHERE id = $1',
+      'SELECT id, email, full_name, phone_number, user_type, location, description FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -89,7 +89,11 @@ exports.getMe = async(req,res) => {
       user: {
         id: user.id,
         name: user.full_name,
-        email: user.email
+        email: user.email,
+        phone: user.phone_number,
+        type: user.user_type,
+        location: user.location,
+        description: user.description
       }
     });
   } catch (err) {
@@ -97,3 +101,31 @@ exports.getMe = async(req,res) => {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+
+// controllers/userController.js
+
+exports.updateDescription = async (req, res) => {
+  try {
+    const { description } = req.body;
+
+    if (!description) {
+      return res.status(400).json({ message: "Description is required" });
+    }
+
+    // req.user.id should come from verifyToken
+    const result = await pool.query(
+      "UPDATE users SET description = $1 WHERE id = $2 RETURNING id, email, description",
+      [description, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "Description updated", user: result.rows[0] });
+  } catch (err) {
+    console.error("Update description error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
