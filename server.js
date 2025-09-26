@@ -5,6 +5,7 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
 const farmerRoutes = require('./routes/farmers');
+const messagesRoutes = require('./routes/messages');
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -13,10 +14,11 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/',authRoutes);
-app.use('/',productRoutes);
-app.use('/', categoryRoutes)
-app.use('/',farmerRoutes)
+app.use('/', authRoutes);
+app.use('/', productRoutes);
+app.use('/', categoryRoutes);
+app.use('/', farmerRoutes);
+app.use('/', messagesRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -75,7 +75,7 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, full_name, phone_number, user_type, location, description FROM users WHERE id = $1',
+      'SELECT id, email, full_name, phone_number, user_type, location, description, profile_picture FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -93,7 +93,8 @@ exports.getMe = async (req, res) => {
         phone: user.phone_number,
         type: user.user_type,
         location: user.location,
-        description: user.description
+        description: user.description,
+        profilepic: user.profile_picture
       }
     });
   } catch (err) {
