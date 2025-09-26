@@ -65,22 +65,20 @@ exports.getChatList = async (req, res) => {
     try {
         const result = await pool.query(
             `
-      SELECT DISTINCT ON (
-        LEAST(m.sender_id, m.receiver_id), 
-        GREATEST(m.sender_id, m.receiver_id)
-      )
-        m.id,
-        m.sender_id,
-        sender.full_name AS sender_name,
-        m.receiver_id,
-        receiver.full_name AS receiver_name,
-        m.text,
-        m.created_at
-      FROM messages m
-      JOIN users sender ON m.sender_id = sender.id
-      JOIN users receiver ON m.receiver_id = receiver.id
-      WHERE m.sender_id = $1 OR m.receiver_id = $1
-      ORDER BY LEAST(m.sender_id, m.receiver_id), GREATEST(m.sender_id, m.receiver_id), m.created_at DESC;
+      SELECT DISTINCT ON (m.sender_id)
+       m.id,
+       m.sender_id,
+       sender.full_name AS sender_name,
+       m.receiver_id,
+       receiver.full_name AS receiver_name,
+       m.text,
+       m.created_at
+FROM messages m
+JOIN users sender ON m.sender_id = sender.id
+JOIN users receiver ON m.receiver_id = receiver.id
+WHERE m.receiver_id = $1
+ORDER BY m.sender_id, m.created_at DESC;
+
       `,
             [userId]
         );
