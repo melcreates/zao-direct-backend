@@ -57,6 +57,11 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
+    await pool.query(
+      `UPDATE users SET online = true, last_seen = NOW() WHERE id = $1`,
+      [user.id]
+    );
+
     res.json({
       message: 'Login successful',
       token,
@@ -69,6 +74,20 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
+  }
+}
+
+exports.logout = async (req, res) => {
+  const { online } = req.body;
+  try {
+    await pool.query(
+      "UPDATE users SET online = $1, last_seen = NOW() WHERE id = $2",
+      [online, req.user.id]
+    );
+    res.json({ message: "User status updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update user status" });
   }
 }
 

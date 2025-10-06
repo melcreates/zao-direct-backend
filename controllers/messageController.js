@@ -69,6 +69,8 @@ exports.getChatList = async (req, res) => {
        m.id,
        m.sender_id,
        sender.full_name AS sender_name,
+       sender.profile_picture AS sender_profile_picture,
+       sender.online AS sender_online,
        m.receiver_id,
        receiver.full_name AS receiver_name,
        m.text,
@@ -78,7 +80,6 @@ JOIN users sender ON m.sender_id = sender.id
 JOIN users receiver ON m.receiver_id = receiver.id
 WHERE m.receiver_id = $1
 ORDER BY m.sender_id, m.created_at DESC;
-
       `,
             [userId]
         );
